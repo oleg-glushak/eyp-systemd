@@ -49,6 +49,8 @@ define systemd::service::dropin (
                                   $standard_error              = undef,
                                   $syslog_facility             = undef,
                                   $killmode                    = undef,
+                                  $cpuquota                    = undef,
+                                  $tasksmax                    = undef,
                                   $successexitstatus           = [],
                                   $killsignal                  = undef,
                                   $syslogidentifier            = undef,
@@ -72,6 +74,8 @@ define systemd::service::dropin (
   {
     include ::systemd
   }
+
+  $dropin = true
 
   file { "/etc/systemd/system/${servicename}.service.d/${dropin_order}-${dropin_name}.conf":
     ensure  => 'present',

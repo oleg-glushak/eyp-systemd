@@ -51,6 +51,7 @@ define systemd::service (
                           $syslog_facility             = undef,
                           $killmode                    = undef,
                           $cpuquota                    = undef,
+                          $tasksmax                    = undef,
                           $successexitstatus           = [],
                           $killsignal                  = undef,
                           $service_alias               = [],
@@ -81,14 +82,7 @@ define systemd::service (
     validate_re($restart, [ '^no$', '^on-success$', '^on-failure$', '^on-abnormal$', '^on-watchdog$', '^on-abort$', '^always$'], "Not a supported restart type: ${restart} - Takes one of no, on-success, on-failure, on-abnormal, on-watchdog, on-abort, or always")
   }
 
-  if versioncmp($::puppetversion, '4.0.0') >= 0
-  {
-    contain ::systemd
-  }
-  else
-  {
-    include ::systemd
-  }
+  include ::systemd
 
   file { "/etc/systemd/system/${servicename}.service":
     ensure  => 'present',

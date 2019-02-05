@@ -1,5 +1,28 @@
 # CHANGELOG
 
+## 0.1.49
+
+* Quick reference for **systemd::timer** - thanks to [towo](https://github.com/towo) for this [PR-119](https://github.com/NTTCom-MS/eyp-systemd/pull/119)
+* Add **TasksMax** parameter for service units - thanks to [v4ld3r5](https://github.com/v4ld3r5) for this [PR-117](https://github.com/NTTCom-MS/eyp-systemd/pull/117)
+
+## 0.1.48
+
+* Allow **logind.conf** to be unmanaged - thanks to [davidnewhall](https://github.com/davidnewhall) for this [PR-106](https://github.com/NTTCom-MS/eyp-systemd/pull/106)
+* Fix dependency circle with puppet 4 - thanks to [TuningYourCode](https://github.com/TuningYourCode) for this [PR-105](https://github.com/NTTCom-MS/eyp-systemd/pull/105)
+
+## 0.1.47
+
+* added OpenSuSE support
+* added Fedora support
+
+## 0.1.46
+
+* Fix ExecStart in dropin - thanks to [bagasse](https://github.com/bagasse) for this [PR-89](https://github.com/NTTCom-MS/eyp-systemd/pull/89)
+
+## 0.1.45
+
+* added CPUQuota support - thanks to [oleg-glushak](https://github.com/oleg-glushak) for this [PR-95](https://github.com/NTTCom-MS/eyp-systemd/pull/95), it have been marged with some changes using [PR-96](https://github.com/NTTCom-MS/eyp-systemd/pull/96)
+
 ## 0.1.44
 
 * added timesyncd support via class **systemd::timesyncd**

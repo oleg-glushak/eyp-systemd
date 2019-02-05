@@ -1,4 +1,4 @@
-# systemd 🎗️
+# systemd
 
 #### Table of Contents
 
@@ -16,16 +16,16 @@
 
 ## Overview
 
-systemd service support
+management of systemd services, services dropins, sockets, timers, timesyncd, journald, logind and resolved daemons
 
 ## Module Description
 
-basic systemd support implemented:
-* service,socket and timer definitions (sys-v wrapper also available)
-* **logind.conf** management (default behaviour is to **disable RemoveIPC** by default)
-* `/etc/systemd/system.conf` (systemd manager configuration)
+This module manages:
+* Creation of services, services dropins, sockets and timers definitions (An optional sys-v wrapper is also available)
+* **logind.conf** under puppet management by default, must be explicitly disabled if needed
+* Other supported configuration files can be managed by puppet by including the appropriate class
 
-For systemd related questions please refer to:
+For systemd related questions please refer to [systemd man pages](https://www.freedesktop.org/software/systemd/man/index.html)
 
 * [Service](https://www.freedesktop.org/software/systemd/man/systemd.service.html)
 * [Unit](https://www.freedesktop.org/software/systemd/man/systemd.exec.html)
@@ -41,22 +41,24 @@ For systemd related questions please refer to:
 - Creates systemd/sys-v compatibility scripts
 - Manages **/etc/systemd/logind.conf**
 - Manages **/etc/systemd/journald.conf**
+- Manages **/etc/systemd/timesyncd.conf**
+- Manages **/etc/systemd/resolved.conf**
 
 ### Setup Requirements
 
-This module requires pluginsync enabled
+This module requires pluginsync enabled for puppet <=4.0
 
-### Basic example:
+### Basic examples
 ---
 #### Systemd Service
 
 ```puppet
-systemd::service { 'kibana':
-  execstart => "${basedir}/${productname}/bin/kibana",
+systemd::service { 'simpledemo':
+  execstart => "/usr/bin/simpledemo",
 }
 ```
 
-This is going to create the following service:
+As a reference, this is going to create the following service:
 
 ```
 [Unit]
@@ -83,7 +85,7 @@ systemd::service::dropin { 'ceph-disk@':
 }
 ```
 
-This is going to create the following overrride file:
+This definition creates the following service dropin:
 
 ```bash
 # cat /etc/systemd/system/ceph-disk@.service.d/override.conf:
@@ -91,7 +93,7 @@ This is going to create the following overrride file:
 Environment=CEPH_DISK_TIMEOUT=3000
 ```
 
-Please be aware this module defaults (documented in the [reference](#reference) section) differ from systemd's defaults
+Please be aware this module defaults (documented in the [reference](#reference) section) can differ from systemd's defaults in some aspects
 
 #### Setup specific systemd manager directives
 
@@ -105,7 +107,8 @@ class { 'systemd::system':
 ## Usage
 ---
 ### Systemd Service:
-add service dependency:
+
+Dependencies between systemd services using systemd directives like **after** in the following example:
 
 ```puppet
 systemd::service { 'oracleasm':
@@ -119,7 +122,7 @@ systemd::service { 'oracleasm':
 }
 ```
 
-env_vars usage example:
+Add environments variables using **env_vars**:
 
 ```puppet
 systemd::service { 'tomcat7':
@@ -136,9 +139,7 @@ systemd::service { 'tomcat7':
 }
 ```
 
-system-v compatibility mode:
-
-Use case: **eyp-mcaffee** uses the following to enable the ma service on CentOS 7
+System-V compatibility mode. The following code is used in **eyp-mcaffee** to enable the ma service on CentOS 7
 
 ```puppet
 systemd::sysvwrapper { 'ma':
@@ -148,9 +149,9 @@ systemd::sysvwrapper { 'ma':
 }
 ```
 
-This creates the following on the system:
+This creates the following files on the system:
 
-systed service definition:
+systemd service definition:
 
 ```bash
 # cat /etc/systemd/system/ma.service
@@ -172,7 +173,7 @@ PIDFile=/var/run/ma.sysvwrapper.pid
 WantedBy=multi-user.target
 ```
 
-control script:
+A control script:
 ```bash
 # cat /etc/init.d/ma.sysvwrapper.wrapper
 #!/bin/bash
@@ -200,7 +201,7 @@ case $1 in
 esac
 ```
 
-process checking ma status (to be able to report status to systemd):
+Once the service is started, this script checks, in this example ma's status, reporting it back to systemd:
 
 ```
 ps auxf
@@ -217,7 +218,7 @@ systemd::service::dropin { 'node_exporter':
 }
 ```
 
-This is going to create the following overrride file:
+This is going to create the following override file:
 
 ```bash
 # cat /etc/systemd/system/node_exporter.service.d/override.conf:
@@ -227,12 +228,12 @@ User=monitoring
 ```
 
 ## Reference
-
+---
 ### classes
 
 #### systemd
 
-base class for systemd reload management
+* **manage_logind**: management of logind (default: true)
 
 #### systemd::timesyncd
 
@@ -363,6 +364,8 @@ systemd-journald is a system service that collects and stores logging data
 * **startlimitinterval**:  Configures the checking interval (default: undef)
 * **startlimitburst**: Configures how many starts per interval are allowed (default: undef)
 * **killmode**: Specifies how processes of this unit shall be killed. One of control-group, process, mixed, none. (default: undef)
+* **cpuquota**: Assign the specified CPU time quota to the processes executed. Takes a percentage value, suffixed with "%". The percentage specifies how much CPU time the unit shall get at maximum, relative to the total CPU time available on one CPU (default: undef)
+* **tasksmax**: Specify the maximum number of tasks that may be created in the unit. (default: undef)
 
 #### systemd::service::dropin
 
@@ -377,6 +380,23 @@ system-v compatibility
 * **initscript**: requred (system-v init script to use)
 * **servicename**: service name (default: resource's name)
 * **check_time**: check interval -time between **initscript** status checks- (default: 10m)
+
+#### systemd::timer
+
+For a detailed explanation of all the timer settings, remember to read `systemd.timer(5)` for the full documentation.
+
+* **on_active_sec**, **on_boot_sec**, **on_startup_sec**, **on_unit_active_sec**, **on_unit_inactive_sec**: Define monotonic timers relative to to different starting points. (default: undef)
+* **on_calendar**: Defines realtime timers with calander event expressions (cf `systemd.time(7)`). (default: undef)
+* **accuracy_sec**: Specify the accuracy of the timer; events are coalesced at a host-specific time between timer setting and this value. (default: undef / 1min)
+* **randomized_delay_sec**: Delay the timer by a randomly selected amount of seconds between 0 and the specified value. (default: undef / 0)
+* **unit**: Unit this timer refers to. (default: undef / service with same name as timer)
+* **persistent**: If `'true'`, stores the state of the timer so that if the timer is re-enabled after a stop, it will run immediately if it would have run during the stop time. (default: undef / `'false'`)
+* **wake_system**: If `'true'`, timer will resume the system from suspend if supported. (default: undef / `'false'`)
+* **remain_after_elapse**: If `'true'`, state of a timer can still be queried after it elapsed. (default: undef / `'true'`)
+* **description**: Description to use for the timer unit. (default: undef)
+* **documentation**: Reference to the documentation for this unit (as per `systemd.unit(5)`). (default: undef)
+* **wantedby**: List of units that *want* this unit in systemd terminolagy. (default: `[]`)
+* **wantedby**: List of units that *require* this unit in systemd terminolagy. (default: `[]`)
 
 ## Limitations
 
