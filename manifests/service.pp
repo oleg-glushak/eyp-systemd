@@ -57,6 +57,7 @@ define systemd::service (
                           $service_alias               = [],
                           $also                        = [],
                           $default_instance            = undef,
+                          $syslogidentifier            = $servicename
                         ) {
 
   if($type!=undef and $forking==true)
@@ -73,8 +74,6 @@ define systemd::service (
   {
     fail('Incompatible options: There are multiple execstop values and Type is not "oneshot"')
   }
-
-  $syslogidentifier = $servicename
 
   if($restart!=undef)
   {
